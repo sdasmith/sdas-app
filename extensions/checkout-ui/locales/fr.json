@@ -1,3 +1,4 @@
 {
-  "welcome": "Bienvenue dans l'extension {{target}}!"
+  "total_product": "Votre panier contient {{quantity}} produit",
+  "total_products": "Votre panier contient {{quantity}} produits"
 }

@@ -1133,7 +1133,7 @@
             }
             return dispatcher.useContext(Context);
           }
-          function useState(initialState) {
+          function useState2(initialState) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useState(initialState);
           }
@@ -1145,7 +1145,7 @@
             var dispatcher = resolveDispatcher();
             return dispatcher.useRef(initialValue);
           }
-          function useEffect(create, deps) {
+          function useEffect2(create, deps) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useEffect(create, deps);
           }
@@ -1927,7 +1927,7 @@
           exports.useContext = useContext3;
           exports.useDebugValue = useDebugValue;
           exports.useDeferredValue = useDeferredValue;
-          exports.useEffect = useEffect;
+          exports.useEffect = useEffect2;
           exports.useId = useId;
           exports.useImperativeHandle = useImperativeHandle;
           exports.useInsertionEffect = useInsertionEffect;
@@ -1935,7 +1935,7 @@
           exports.useMemo = useMemo2;
           exports.useReducer = useReducer;
           exports.useRef = useRef2;
-          exports.useState = useState;
+          exports.useState = useState2;
           exports.useSyncExternalStore = useSyncExternalStore;
           exports.useTransition = useTransition;
           exports.version = ReactVersion;
@@ -19475,20 +19475,50 @@ ${errorInfo.componentStack}`);
     return api;
   }
 
-  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/translate.mjs
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/subscription.mjs
   var import_react10 = __toESM(require_react(), 1);
+  function useSubscription(subscription) {
+    const [, setValue] = (0, import_react10.useState)(subscription.current);
+    (0, import_react10.useEffect)(() => {
+      let didUnsubscribe = false;
+      const checkForUpdates = (newValue) => {
+        if (didUnsubscribe) {
+          return;
+        }
+        setValue(newValue);
+      };
+      const unsubscribe = subscription.subscribe(checkForUpdates);
+      checkForUpdates(subscription.current);
+      return () => {
+        didUnsubscribe = true;
+        unsubscribe();
+      };
+    }, [subscription]);
+    return subscription.current;
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/cart-lines.mjs
+  function useCartLines() {
+    const {
+      lines
+    } = useApi();
+    return useSubscription(lines);
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/translate.mjs
+  var import_react11 = __toESM(require_react(), 1);
   function useTranslate() {
     const {
       i18n
     } = useApi();
-    const translate = (0, import_react10.useCallback)((...args) => {
+    const translate = (0, import_react11.useCallback)((...args) => {
       const translation = i18n.translate(...args);
       if (!Array.isArray(translation)) {
         return translation;
       }
       return translation.map((part, index) => {
-        if (/* @__PURE__ */ (0, import_react10.isValidElement)(part)) {
-          return /* @__PURE__ */ (0, import_react10.cloneElement)(part, {
+        if (/* @__PURE__ */ (0, import_react11.isValidElement)(part)) {
+          return /* @__PURE__ */ (0, import_react11.cloneElement)(part, {
             key: index
           });
         }
@@ -19500,14 +19530,13 @@ ${errorInfo.componentStack}`);
 
   // extensions/checkout-ui/src/Checkout.jsx
   var import_jsx_runtime4 = __toESM(require_jsx_runtime());
-  var Checkout_default = reactExtension(
-    "purchase.checkout.block.render",
-    () => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Extension, {})
-  );
+  var Checkout_default = reactExtension("purchase.checkout.block.render", () => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Extension, {}));
   function Extension() {
     const translate = useTranslate();
     const { extension: extension2 } = useApi();
-    return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Banner2, { title: "checkout-ui", children: translate("welcome", { target: extension2.target }) });
+    const cartLines = useCartLines();
+    const quantity = cartLines.reduce((acc, line) => acc + line.quantity, 0);
+    return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Banner2, { title: "Number of items in cart", children: quantity === 1 ? translate("total_product", { quantity }) : translate("total_products", { quantity }) });
   }
 })();
 //# sourceMappingURL=checkout-ui.js.map

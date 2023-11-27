@@ -1,3 +1,4 @@
 {
-  "welcome": "Welcome to the {{target}} extension!"
+  "total_product": "Your cart contains {{quantity}} product",
+  "total_products": "Your cart contains {{quantity}} products"
 }
